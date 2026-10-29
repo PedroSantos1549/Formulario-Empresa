@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro Corporativo - Formulário</title>
+    <style>
+        body {
+            font-family: "Courier New", Courier, monospace; /* Estilo mais técnico/documento antigo */
+            background-color: #ffffff;
+            color: #000000;
+            margin: 0;
+            padding: 30px;
+        }
+
+        .bloco-principal {
+            max-width: 650px;
+            margin: 0 auto;
+            border: 2px solid #000000;
+            padding: 25px;
+        }
+
+        .cabecalho-form {
+            border-bottom: 2px solid #000000;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .cabecalho-form h2 {
+            margin: 0;
+            font-size: 18px;
+            letter-spacing: 1px;
+        }
+
+        .cabecalho-form p {
+            margin: 5px 0 0;
+            font-size: 11px;
+        }
+
+        /* Tabela estruturada simulando formulário de papel */
+        .tabela-form {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .tabela-form td {
+            border: 1px solid #000000;
+            padding: 8px;
+            vertical-align: top;
+        }
+
+        .rotulo {
+            font-size: 11px;
+            font-weight: bold;
+            display: block;
+            margin-bottom: 3px;
+            text-transform: uppercase;
+        }
+
+        input {
+            width: 100%;
+            border: none;
+            outline: none;
+            font-family: inherit;
+            font-size: 13px;
+            background: transparent;
+            box-sizing: border-box;
+        }
+
+        .aviso-auxiliar {
+            font-size: 10px;
+            display: block;
+            margin-top: 2px;
+        }
+
+        .barra-botoes {
+            margin-top: 20px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .botao-acao {
+            font-family: inherit;
+            padding: 8px 20px;
+            font-size: 12px;
+            font-weight: bold;
+            border: 1px solid #000000;
+            background: #000000;
+            color: #ffffff;
+            cursor: pointer;
+        }
+
+        .botao-acao.limpar {
+            background: #ffffff;
+            color: #000000;
+        }
+
+        .botao-acao:hover {
+            opacity: 0.8;
+        }
+
+        .caixa-retorno {
+            margin-top: 15px;
+            padding: 8px;
+            font-size: 12px;
+            border: 1px solid #000000;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="bloco-principal">
+        <div class="cabecalho-form">
+            <h2>REGISTRO DE EMPRESA</h2>
+            <p>Preencha os campos abaixo de acordo com a documentação oficial.</p>
+        </div>
+
+        <form id="formAlternativo" novalidate>
+            <table class="tabela-form">
+                <tr>
+                    <td colspan="2">
+                        <span class="rotulo">Nome da empresa *</span>
+                        <input type="text" id="nomeEmpresa" required maxlength="150" placeholder="Razão social">
+                    </td>
+                </tr>
+                <tr>
+                    <td style="width: 55%;">
+                        <span class="rotulo">CNPJ *</span>
+                        <input type="text" id="cnpj" required maxlength="18" placeholder="00.000.000/0000-00">
+                        <span class="aviso-auxiliar">Padrão tradicional ou alfanumérico[cite: 1].</span>
+                        <span id="statusCnpj" style="font-size: 10px; font-weight: bold; display: block; margin-top: 2px;"></span>
+                    </td>
+                    <td style="width: 45%;">
+                        <span class="rotulo">Inscrição Estadual (IE) *</span>
+                        <input type="text" id="ie" required maxlength="30" placeholder="Número da IE">
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2">
+                        <span class="rotulo">Endereço *</span>
+                        <input type="text" id="endereco" required maxlength="250" placeholder="Logradouro, número, bairro, cidade - UF">
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <span class="rotulo">Fone de contato *</span>
+                        <input type="tel" id="telefone" required maxlength="15" placeholder="(00) 00000-0000">
+                    </td>
+                    <td>
+                        <span class="rotulo">Responsável (Pessoa Física) *</span>
+                        <input type="text" id="responsavel" required maxlength="150" placeholder="Nome completo">
+                    </td>
+                </tr>
+            </table>
+
+            <div class="barra-botoes">
+                <button type="reset" class="botao-acao limpar">Limpar Campos</button>
+                <button type="submit" class="botao-acao">Salvar Registro</button>
+            </div>
+
+            <div id="mensagemRetorno" class="caixa-retorno"></div>
+        </form>
+    </div>
+
+    <script>
+        const formulario = document.getElementById('formAlternativo');
+        const campoCnpj = document.getElementById('cnpj');
+        const campoTelefone = document.getElementById('telefone');
+        const statusCnpj = document.getElementById('statusCnpj');
+        const mensagemRetorno = document.getElementById('mensagemRetorno');
+        const CHAVE_DB = 'formulario_empresa_simples'; // Usa a mesma chave para integrar perfeitamente com o gerenciarempresa.html
+
+        function limpaAlfa(v) {
+            return v.toUpperCase().replace(/[^A-Z0-9]/g, '');
+        }
+
+        function mascaraCnpj(v) {
+            const c = limpaAlfa(v).slice(0, 14);
+            if (c.length <= 2) return c;
+            if (c.length <= 5) return c.slice(0, 2) + '.' + c.slice(2);
+            if (c.length <= 8) return c.slice(0, 2) + '.' + c.slice(2, 5) + '.' + c.slice(5);
+            if (c.length <= 12) return c.slice(0, 2) + '.' + c.slice(2, 5) + '.' + c.slice(5, 8) + '/' + c.slice(8);
+            return c.slice(0, 2) + '.' + c.slice(2, 5) + '.' + c.slice(5, 8) + '/' + c.slice(8, 12) + '-' + c.slice(12);
+        }
+
+        function validaCnpj(v) {
+            const c = limpaAlfa(v);
+            if (c.length !== 14 || /^([0-9])\1{13}$/.test(c)) return false;
+            
+            const calc = (base, pesos) => {
+                let soma = 0;
+                for (let i = 0; i < pesos.length; i++) {
+                    soma += (base.charCodeAt(i) - 48) * pesos[i];
+                }
+                const resto = soma % 11;
+                return resto < 2 ? 0 : 11 - resto;
+            };
+
+            const p1 = [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
+            const p2 = [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
+
+            if (calc(c.slice(0, 12), p1) !== Number(c[12])) return false;
+            return calc(c.slice(0, 13), p2) === Number(c[13]);
+        }
+
+        function mascaraTel(v) {
+            let n = v.replace(/\D/g, '').slice(0, 11);
+            if (n.length <= 2) return '(' + n;
+            if (n.length <= 6) return '(' + n.slice(0, 2) + ') ' + n.slice(2);
+            if (n.length <= 10) return '(' + n.slice(0, 2) + ') ' + n.slice(2, 6) + '-' + n.slice(6);
+            return '(' + n.slice(0, 2) + ') ' + n.slice(2, 7) + '-' + n.slice(7);
+        }
+
+        campoCnpj.addEventListener('input', () => {
+            campoCnpj.value = mascaraCnpj(campoCnpj.value);
+            const limpo = limpaAlfa(campoCnpj.value);
+            if (!limpo) {
+                statusCnpj.textContent = '';
+            } else if (limpo.length < 14) {
+                statusCnpj.textContent = 'Incompleto';
+            } else if (validaCnpj(limpo)) {
+                statusCnpj.textContent = 'Válido';
+            } else {
+                statusCnpj.textContent = 'Inválido';
+            }
+        });
+
+        campoTelefone.addEventListener('input', () => {
+            campoTelefone.value = mascaraTel(campoTelefone.value);
+        });
+
+        formulario.addEventListener('submit', (e) => {
+            e.preventDefault();
+            mensagemRetorno.style.display = 'none';
+
+            const nomeEmpresa = document.getElementById('nomeEmpresa').value.trim();
+            const cnpj = campoCnpj.value.trim();
+            const ie = document.getElementById('ie').value.trim();
+            const endereco = document.getElementById('endereco').value.trim();
+            const telefone = campoTelefone.value.trim();
+            const responsavel = document.getElementById('responsavel').value.trim();
+
+            if (!validaCnpj(cnpj)) {
+                mensagemRetorno.textContent = 'Erro: O CNPJ informado é inválido.';
+                mensagemRetorno.style.display = 'block';
+                return;
+            }
+
+            const novaEmpresa = { nomeEmpresa, cnpj, ie, endereco, telefone, responsavel };
+            
+            let dados = [];
+            try {
+                dados = JSON.parse(localStorage.getItem(CHAVE_DB) || '[]');
+            } catch {
+                dados = [];
+            }
+            
+            dados.unshift(novaEmpresa);
+            localStorage.setItem(CHAVE_DB, JSON.stringify(dados));
+
+            formulario.reset();
+            statusCnpj.textContent = '';
+            mensagemRetorno.textContent = 'Registro salvo com sucesso!';
+            mensagemRetorno.style.display = 'block';
+        });
+    </script>
+</body>
+</html>

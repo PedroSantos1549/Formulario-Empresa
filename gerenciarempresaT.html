@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciamento de Registros Corporativos</title>
+    <style>
+        body {
+            font-family: "Courier New", Courier, monospace;
+            background-color: #ffffff;
+            color: #000000;
+            margin: 0;
+            padding: 30px;
+        }
+
+        .bloco-principal {
+            max-width: 700px;
+            margin: 0 auto;
+            border: 2px solid #000000;
+            padding: 25px;
+        }
+
+        .cabecalho-gerenciamento {
+            border-bottom: 2px solid #000000;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .cabecalho-gerenciamento h2 {
+            margin: 0;
+            font-size: 16px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .link-voltar {
+            font-size: 11px;
+            text-decoration: none;
+            color: #000000;
+            border: 1px solid #000000;
+            padding: 4px 8px;
+            font-weight: bold;
+        }
+
+        .link-voltar:hover {
+            background-color: #000000;
+            color: #ffffff;
+        }
+
+        /* Tabela de listagem */
+        .tabela-registros {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        .tabela-registros th, 
+        .tabela-registros td {
+            border: 1px solid #000000;
+            padding: 8px;
+            font-size: 12px;
+            text-align: left;
+            vertical-align: middle;
+        }
+
+        .tabela-registros th {
+            background-color: #f0f0f0;
+            text-transform: uppercase;
+            font-size: 11px;
+        }
+
+        .botao-excluir {
+            font-family: inherit;
+            padding: 4px 8px;
+            font-size: 11px;
+            font-weight: bold;
+            border: 1px solid #000000;
+            background: #ffffff;
+            color: #000000;
+            cursor: pointer;
+        }
+
+        .botao-excluir:hover {
+            background: #000000;
+            color: #ffffff;
+        }
+
+        .vazio {
+            text-align: center;
+            font-size: 12px;
+            padding: 20px;
+            border: 1px dashed #000000;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="bloco-principal">
+        <div class="cabecalho-gerenciamento">
+            <h2>Empresas Registradas</h2>
+            <a href="index.html" class="link-voltar">&larr; Voltar ao Formulário</a>
+        </div>
+
+        <div id="containerLista">
+            <!-- Os dados salvos aparecem aqui via JavaScript -->
+        </div>
+    </div>
+
+    <script>
+        const containerLista = document.getElementById('containerLista');
+        const CHAVE_DB = 'formulario_empresa_simples'; // Compartilha a mesma chave para ler os dados enviados pelo formulário
+
+        function carregarRegistros() {
+            try {
+                const dados = JSON.parse(localStorage.getItem(CHAVE_DB) || '[]');
+                return Array.isArray(dados) ? dados : [];
+            } catch {
+                return [];
+            }
+        }
+
+        function salvarRegistros(dados) {
+            localStorage.setItem(CHAVE_DB, JSON.stringify(dados));
+        }
+
+        function renderizarTabela() {
+            const registros = carregarRegistros();
+            containerLista.innerHTML = '';
+
+            if (registros.length === 0) {
+                containerLista.innerHTML = '<div class="vazio">Nenhum registro encontrado no armazenamento local.</div>';
+                return;
+            }
+
+            let html = `
+                <table class="tabela-registros">
+                    <thead>
+                        <tr>
+                            <th>Empresa / CNPJ</th>
+                            <th>Detalhes</th>
+                            <th style="width: 70px; text-align: center;">Ação</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            registros.forEach((item, index) => {
+                html += `
+                    <tr>
+                        <td>
+                            <strong>${item.nomeEmpresa}</strong><br>
+                            <span style="font-size: 11px;">CNPJ: ${item.cnpj}</span><br>
+                            <span style="font-size: 11px;">IE: ${item.ie}</span>
+                        </td>
+                        <td>
+                            <span style="font-size: 11px;"><strong>Endereço:</strong> ${item.endereco}</span><br>
+                            <span style="font-size: 11px;"><strong>Fone:</strong> ${item.telefone}</span><br>
+                            <span style="font-size: 11px;"><strong>Responsável:</strong> ${item.responsavel}</span>
+                        </td>
+                        <td style="text-align: center;">
+                            <button class="botao-excluir" onclick="removerRegistro(${index})">Excluir</button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            html += `</tbody></table>`;
+            containerLista.innerHTML = html;
+        }
+
+        window.removerRegistro = function(index) {
+            const registros = carregarRegistros();
+            registros.splice(index, 1);
+            salvarRegistros(registros);
+            renderizarTabela();
+        };
+
+        renderizarTabela();
+    </script>
+</body>
+</html>
