@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciamento de Empresas</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #ffffff;
+            color: #000000;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+            border: 1px solid #000000;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 20px;
+            margin-bottom: 5px;
+        }
+
+        p.instrucao {
+            text-align: center;
+            font-size: 13px;
+            margin-bottom: 20px;
+        }
+
+        .voltar {
+            display: inline-block;
+            margin-bottom: 15px;
+            font-size: 13px;
+            text-decoration: none;
+            color: #000000;
+            border: 1px solid #000000;
+            padding: 5px 10px;
+        }
+
+        .voltar:hover {
+            background-color: #000000;
+            color: #ffffff;
+        }
+
+        .item-empresa {
+            border: 1px solid #000000;
+            padding: 12px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            font-size: 13px;
+        }
+
+        .dados-empresa p {
+            margin: 3px 0;
+            line-height: 1.4;
+        }
+
+        button.btn-excluir {
+            padding: 5px 10px;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            border: 1px solid #000000;
+            background-color: #ffffff;
+            color: #000000;
+        }
+
+        button.btn-excluir:hover {
+            background-color: #000000;
+            color: #ffffff;
+        }
+
+        .vazio {
+            text-align: center;
+            font-size: 13px;
+            padding: 20px;
+            border: 1px dashed #000000;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <a href="index.html" class="voltar">&larr; Voltar para o Formulário</a>
+        
+        <h1>Gerenciamento de Empresas</h1>
+        <p class="instrucao">Lista de empresas salvas no navegador</p>
+
+        <div id="listaEmpresas">
+            <!-- Os registros aparecem aqui via JavaScript -->
+        </div>
+    </div>
+
+    <script>
+        const listaEmpresas = document.getElementById('listaEmpresas');
+        const CHAVE_DB = 'formulario_empresa_simples';
+
+        function carregarEmpresas() {
+            try {
+                const dados = JSON.parse(localStorage.getItem(CHAVE_DB) || '[]');
+                return Array.isArray(dados) ? dados : [];
+            } catch {
+                return [];
+            }
+        }
+
+        function salvarEmpresas(dados) {
+            localStorage.setItem(CHAVE_DB, JSON.stringify(dados));
+        }
+
+        function renderizarLista() {
+            const empresas = carregarEmpresas();
+            listaEmpresas.innerHTML = '';
+
+            if (empresas.length === 0) {
+                listaEmpresas.innerHTML = '<div class="vazio">Nenhuma empresa registrada no momento.</div>';
+                return;
+            }
+
+            empresas.forEach((emp, index) => {
+                const div = document.createElement('div');
+                div.className = 'item-empresa';
+                
+                div.innerHTML = `
+                    <div class="dados-empresa">
+                        <p><strong>Nome:</strong> ${emp.nomeEmpresa}</p>
+                        <p><strong>CNPJ:</strong> ${emp.cnpj} | <strong>IE:</strong> ${emp.ie}</p>
+                        <p><strong>Endereço:</strong> ${emp.endereco}</p>
+                        <p><strong>Fone:</strong> ${emp.telefone}</p>
+                        <p><strong>Responsável:</strong> ${emp.responsavel}</p>
+                    </div>
+                    <button class="btn-excluir" onclick="excluir(${index})">Excluir</button>
+                `;
+                listaEmpresas.appendChild(div);
+            });
+        }
+
+        window.excluir = function(index) {
+            const empresas = carregarEmpresas();
+            empresas.splice(index, 1);
+            salvarEmpresas(empresas);
+            renderizarLista();
+        };
+
+        renderizarLista();
+    </script>
+</body>
+</html>
